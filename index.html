@@ -2,318 +2,390 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jadwal Harian Aesthetic</title>
-    <!-- Tailwind CSS -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Hamster Lapar Aesthetic</title>
+    <!-- Tailwind CSS untuk styling yang cepat dan responsif -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Font Quicksand untuk kesan bulat, lembut, dan aesthetic -->
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;700&display=swap" rel="stylesheet">
+    
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-        
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Quicksand', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+            touch-action: none; /* Mencegah layar tertarik saat digeser di HP */
         }
 
-        .scrollbar-hide::-webkit-scrollbar {
-            display: none;
+        /* Gradasi pastel untuk background game */
+        .game-bg {
+            background: linear-gradient(120deg, #e0c3fc 0%, #8ec5fc 100%);
+            position: relative;
+            overflow: hidden;
         }
-        .scrollbar-hide {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
+
+        /* Efek Glassmorphism (kaca aesthetic) */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.4);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
         }
-        input[type="time"]::-webkit-calendar-picker-indicator {
-            cursor: pointer;
-            opacity: 0.6;
-            transition: 0.2s;
+
+        .falling-item {
+            position: absolute;
+            font-size: 2.5rem;
+            user-select: none;
+            /* Efek bayangan lembut pada emoji */
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
+            z-index: 10;
         }
-        input[type="time"]::-webkit-calendar-picker-indicator:hover {
-            opacity: 1;
+
+        #player {
+            position: absolute;
+            bottom: 20px;
+            font-size: 4rem;
+            user-select: none;
+            transition: transform 0.1s ease-out;
+            filter: drop-shadow(0 10px 10px rgba(0,0,0,0.2));
+            z-index: 20;
+            /* Memusatkan titik transform di tengah karakter */
+            transform-origin: center bottom;
+        }
+
+        /* Animasi saat hamster makan */
+        .eat-anim {
+            transform: scale(1.2, 0.8) !important;
+        }
+
+        /* Animasi teks mengambang saat dapat skor */
+        .floating-text {
+            position: absolute;
+            font-weight: bold;
+            color: white;
+            font-size: 1.5rem;
+            pointer-events: none;
+            animation: floatUp 1s ease-out forwards;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            z-index: 30;
+        }
+
+        @keyframes floatUp {
+            0% { transform: translateY(0) scale(1); opacity: 1; }
+            100% { transform: translateY(-50px) scale(1.5); opacity: 0; }
+        }
+
+        /* Animasi goyang saat kena rintangan */
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            50% { transform: translateX(10px); }
+            75% { transform: translateX(-10px); }
+            100% { transform: translateX(0); }
+        }
+        .shake-screen {
+            animation: shake 0.3s ease-in-out;
         }
     </style>
 </head>
-<body class="min-h-screen bg-[#F9F8F6] flex items-center justify-center p-4 md:p-6 text-[#4A4A4A]">
+<body class="text-gray-800 antialiased">
 
-    <!-- Main Card Container -->
-    <div class="w-full max-w-md bg-white rounded-[2.5rem] shadow-[0_20px_40px_-15px_rgba(0,0,0,0.05)] overflow-hidden relative h-[90vh] md:h-[85vh] flex flex-col border border-[#F0EFEB]">
+    <!-- Container Utama Game (Dibatasi ukurannya agar pas seperti main di HP walau di desktop) -->
+    <div id="gameBox" class="game-bg w-full h-[100dvh] sm:h-[800px] sm:max-w-md sm:rounded-[40px] sm:shadow-2xl flex flex-col relative">
         
-        <!-- Header Section -->
-        <div class="bg-[#FAF9F7] px-8 pt-10 pb-8 rounded-b-[2.5rem] shadow-sm z-10 relative">
-            <div class="flex justify-between items-start mb-6">
-                <div>
-                    <div class="flex items-center gap-2 text-[#8C8C8C] text-sm font-medium mb-1 tracking-wide">
-                        <i data-lucide="calendar" class="w-4 h-4"></i>
-                        <span id="current-date">Memuat tanggal...</span>
-                    </div>
-                    <h1 id="greeting-title" class="text-2xl font-semibold text-[#2D2D2D] flex items-center gap-2 mt-2">
-                        Selamat Pagi <i data-lucide="coffee" class="w-5 h-5 text-[#D4C4B7]"></i>
-                    </h1>
-                </div>
-                <!-- User Avatar Placeholder -->
-                <div class="w-12 h-12 rounded-full bg-[#F3EFEA] border-2 border-white shadow-sm flex items-center justify-center text-[#A39A92]">
-                    <i data-lucide="sparkles" class="w-6 h-6"></i>
-                </div>
+        <!-- Header (Skor dan Nyawa) -->
+        <div class="glass-panel m-4 p-4 rounded-2xl flex justify-between items-center z-30">
+            <div class="flex flex-col">
+                <span class="text-sm font-bold text-gray-600 uppercase tracking-wider">Skor</span>
+                <span id="scoreDisplay" class="text-3xl font-bold text-white drop-shadow-md">0</span>
             </div>
-
-            <!-- Progress Bar -->
-            <div class="mt-4 bg-white p-4 rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.02)] border border-[#F5F5F5]">
-                <div class="flex justify-between items-end mb-2">
-                    <span class="text-sm font-medium text-[#737373]">Progress Hari Ini</span>
-                    <span id="progress-percentage" class="text-sm font-bold text-[#2D2D2D]">0%</span>
-                </div>
-                <div class="w-full bg-[#F0EFEB] rounded-full h-2.5 overflow-hidden">
-                    <div id="progress-bar-fill" class="bg-[#D4C4B7] h-2.5 rounded-full transition-all duration-700 ease-out" style="width: 0%;"></div>
-                </div>
-                <p id="progress-text" class="text-xs text-[#A3A3A3] mt-2 font-medium">
-                    0 dari 0 tugas selesai
-                </p>
+            <div class="flex flex-col items-end">
+                <span class="text-sm font-bold text-gray-600 uppercase tracking-wider">Nyawa</span>
+                <span id="livesDisplay" class="text-2xl tracking-widest">❤️❤️❤️</span>
             </div>
         </div>
 
-        <!-- Task List Section -->
-        <div class="flex-1 overflow-y-auto px-6 py-6 pb-24 scrollbar-hide">
-            <div id="task-list" class="space-y-3">
-                <!-- Tugas akan dimuat di sini oleh JavaScript -->
-            </div>
-        </div>
+        <!-- Karakter Pemain (Hamster) -->
+        <div id="player">🐹</div>
 
-        <!-- Add Button & Form Overlay -->
-        <div class="absolute bottom-0 left-0 right-0 p-6 pointer-events-none">
-            <div class="relative w-full max-w-sm mx-auto pointer-events-auto">
+        <!-- Menu Start / Game Over Overlay -->
+        <div id="menuOverlay" class="absolute inset-0 flex items-center justify-center z-50 p-6">
+            <div class="glass-panel w-full rounded-3xl p-8 text-center transform transition-all duration-300">
+                <h1 id="menuTitle" class="text-4xl font-bold text-gray-800 mb-2">Hamster Lapar</h1>
+                <p id="menuDesc" class="text-gray-600 font-medium mb-6">Bantu Hamster menangkap cemilan manis! Hindari sayuran dan makanan pedas.</p>
                 
-                <!-- Form -->
-                <div id="add-task-form" class="absolute bottom-16 left-0 right-0 bg-white rounded-3xl shadow-[0_10px_40px_rgba(0,0,0,0.1)] p-5 border border-[#F5F5F5] transition-all duration-300 origin-bottom opacity-0 scale-95 translate-y-10 pointer-events-none">
-                    <h3 class="text-lg font-semibold text-[#2D2D2D] mb-4">Jadwal Baru</h3>
-                    <form id="taskForm" class="space-y-4">
-                        <div>
-                            <input type="text" id="taskTitle" placeholder="Apa rencanamu?" required class="w-full bg-[#FAF9F7] text-[#2D2D2D] placeholder-[#A3A3A3] px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D4C4B7] text-sm transition-all" />
-                        </div>
-                        <div class="flex gap-3">
-                            <input type="time" id="taskTime" required class="flex-1 bg-[#FAF9F7] text-[#2D2D2D] px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D4C4B7] text-sm transition-all" />
-                            <div class="flex items-center gap-1 bg-[#FAF9F7] p-2 rounded-xl" id="color-picker">
-                                <!-- Pilihan warna akan di-render di sini -->
-                            </div>
-                        </div>
-                        <button type="submit" id="submitBtn" class="w-full bg-[#2D2D2D] text-white font-medium py-3 rounded-xl hover:bg-[#4A4A4A] transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-                            Simpan Jadwal
-                        </button>
-                    </form>
+                <div id="scoreResult" class="hidden mb-6">
+                    <p class="text-gray-600 font-bold uppercase text-sm">Skor Akhir Kamu</p>
+                    <p id="finalScore" class="text-5xl font-bold text-pink-500 drop-shadow-sm">0</p>
                 </div>
 
-                <!-- Floating Action Button -->
-                <div class="flex justify-center mt-4">
-                    <button id="fab-button" onclick="toggleForm()" class="flex items-center justify-center w-14 h-14 rounded-full shadow-[0_8px_20px_rgba(212,196,183,0.5)] transition-all duration-300 bg-[#D4C4B7] text-white hover:bg-[#C2B2A5] hover:scale-105">
-                        <i data-lucide="plus" class="w-7 h-7"></i>
-                    </button>
+                <div class="flex justify-center gap-4 mb-8 text-3xl">
+                    <span class="animate-bounce" style="animation-delay: 0s;">🍓</span>
+                    <span class="animate-bounce" style="animation-delay: 0.1s;">🍰</span>
+                    <span class="animate-bounce" style="animation-delay: 0.2s;">🍡</span>
                 </div>
+
+                <button id="startBtn" class="bg-white text-pink-500 font-bold text-xl py-3 px-8 rounded-full shadow-lg hover:bg-pink-50 hover:scale-105 active:scale-95 transition-all w-full border-2 border-pink-100">
+                    Mulai Main!
+                </button>
             </div>
         </div>
 
     </div>
 
-    <!-- Application Logic -->
     <script>
-        // State
-        let tasks = [
-            { id: 1, title: 'Morning Skincare & Stretching', time: '07:00', completed: true, color: 'green' },
-            { id: 2, title: 'Matcha Latte & Journaling', time: '08:00', completed: false, color: 'yellow' },
-            { id: 3, title: 'Deep Work: Project Alpha', time: '09:30', completed: false, color: 'blue' },
-            { id: 4, title: 'Makan Siang & Istirahat', time: '12:00', completed: false, color: 'orange' },
-            { id: 5, title: 'Pilates Class / Home Workout', time: '17:00', completed: false, color: 'pink' },
-        ];
+        // --- Konfigurasi Game ---
+        const gameBox = document.getElementById('gameBox');
+        const player = document.getElementById('player');
+        const scoreDisplay = document.getElementById('scoreDisplay');
+        const livesDisplay = document.getElementById('livesDisplay');
+        const menuOverlay = document.getElementById('menuOverlay');
+        const startBtn = document.getElementById('startBtn');
+        const menuTitle = document.getElementById('menuTitle');
+        const menuDesc = document.getElementById('menuDesc');
+        const scoreResult = document.getElementById('scoreResult');
+        const finalScore = document.getElementById('finalScore');
 
-        let selectedColor = 'pink';
-        let isFormOpen = false;
+        // Daftar Item (Emoji)
+        const goodItems = ['🍓', '🍰', '🍡', '🍩', '🍪', '🥞', '🍉'];
+        const badItems = ['🥦', '🌶️', '💣']; // Hamster tidak suka ini!
 
-        const colors = {
-            pink: { bg: 'bg-[#FDF2F8]', border: 'border-[#FCE7F3]', text: 'text-[#DB2777]', tag: 'bg-[#FCE7F3] text-[#BE185D]' },
-            green: { bg: 'bg-[#F0FDF4]', border: 'border-[#DCFCE7]', text: 'text-[#16A34A]', tag: 'bg-[#DCFCE7] text-[#15803D]' },
-            blue: { bg: 'bg-[#F0F9FF]', border: 'border-[#E0F2FE]', text: 'text-[#0284C7]', tag: 'bg-[#E0F2FE] text-[#0369A1]' },
-            yellow: { bg: 'bg-[#FEFCE8]', border: 'border-[#FEF08A]', text: 'text-[#CA8A04]', tag: 'bg-[#FEF08A] text-[#A16207]' },
-            orange: { bg: 'bg-[#FFF7ED]', border: 'border-[#FFEDD5]', text: 'text-[#EA580C]', tag: 'bg-[#FFEDD5] text-[#C2410C]' },
-        };
+        // Variabel Status Game
+        let score = 0;
+        let lives = 3;
+        let isPlaying = false;
+        let items = [];
+        let gameLoopId;
+        let spawnInterval;
+        let baseSpeed = 3;
+        let spawnRate = 1000; // ms
 
-        const colorOptions = Object.keys(colors);
+        // Posisi Pemain (di tengah awalnya)
+        let playerX = gameBox.clientWidth / 2 - 32; 
 
-        // Initialize Lucide Icons
-        lucide.createIcons();
-
-        // Update Date and Greeting
-        function updateHeader() {
-            const now = new Date();
-            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-            document.getElementById('current-date').textContent = now.toLocaleDateString('id-ID', options);
-
-            const hour = now.getHours();
-            let greeting = 'Selamat Malam';
-            let iconName = 'moon';
-
-            if (hour >= 5 && hour < 11) { 
-                greeting = 'Selamat Pagi'; 
-                iconName = 'coffee'; 
-            } else if (hour >= 11 && hour < 15) { 
-                greeting = 'Selamat Siang'; 
-                iconName = 'sparkles'; 
-            } else if (hour >= 15 && hour < 18) { 
-                greeting = 'Selamat Sore'; 
-                iconName = 'clock'; 
-            }
-
-            document.getElementById('greeting-title').innerHTML = `
-                ${greeting} <i data-lucide="${iconName}" class="w-5 h-5 text-[#D4C4B7]"></i>
-            `;
-            lucide.createIcons(); // Re-render icons in header
-        }
-
-        // Render Color Picker
-        function renderColorPicker() {
-            const container = document.getElementById('color-picker');
-            container.innerHTML = colorOptions.map(color => `
-                <button
-                    type="button"
-                    onclick="selectColor('${color}')"
-                    class="w-6 h-6 rounded-full ${colors[color].bg} border-2 transition-transform ${selectedColor === color ? 'border-gray-400 scale-110' : 'border-transparent hover:scale-110'}"
-                    aria-label="Pilih warna ${color}"
-                ></button>
-            `).join('');
-        }
-
-        function selectColor(color) {
-            selectedColor = color;
-            renderColorPicker(); // Re-render untuk update UI border yang aktif
-        }
-
-        // Toggle Form
-        function toggleForm() {
-            isFormOpen = !isFormOpen;
-            const formContainer = document.getElementById('add-task-form');
-            const fabButton = document.getElementById('fab-button');
-
-            if (isFormOpen) {
-                // Show form
-                formContainer.classList.remove('opacity-0', 'scale-95', 'translate-y-10', 'pointer-events-none');
-                formContainer.classList.add('opacity-100', 'scale-100', 'translate-y-0');
-                
-                // Rotate FAB and change to white background
-                fabButton.classList.remove('bg-[#D4C4B7]', 'text-white', 'hover:bg-[#C2B2A5]');
-                fabButton.classList.add('bg-white', 'text-[#2D2D2D]', 'rotate-45', 'border', 'border-[#E8E6E1]');
-            } else {
-                // Hide form
-                formContainer.classList.add('opacity-0', 'scale-95', 'translate-y-10', 'pointer-events-none');
-                formContainer.classList.remove('opacity-100', 'scale-100', 'translate-y-0');
-                
-                // Reset FAB
-                fabButton.classList.add('bg-[#D4C4B7]', 'text-white', 'hover:bg-[#C2B2A5]');
-                fabButton.classList.remove('bg-white', 'text-[#2D2D2D]', 'rotate-45', 'border', 'border-[#E8E6E1]');
-            }
-        }
-
-        // Render Tasks
-        function renderTasks() {
-            const taskList = document.getElementById('task-list');
+        // Fungsi Memulai Game
+        function startGame() {
+            score = 0;
+            lives = 3;
+            isPlaying = true;
+            items.forEach(item => item.el.remove()); // Bersihkan layar
+            items = [];
+            baseSpeed = 3;
+            spawnRate = 1200;
             
-            if (tasks.length === 0) {
-                taskList.innerHTML = `
-                    <div class="text-center text-[#A3A3A3] mt-10 flex flex-col items-center">
-                        <i data-lucide="sparkles" class="w-12 h-12 mb-3 text-[#E8E6E1]"></i>
-                        <p>Belum ada jadwal hari ini.</p>
-                        <p class="text-sm">Yuk, rencanakan harimu!</p>
-                    </div>
-                `;
-            } else {
-                taskList.innerHTML = tasks.map(task => `
-                    <div class="group flex items-center justify-between p-4 rounded-2xl transition-all duration-300 border border-transparent
-                        ${task.completed ? 'opacity-60 bg-[#FAFAFA]' : `bg-white shadow-[0_2px_10px_rgba(0,0,0,0.02)] hover:shadow-[0_8px_20px_rgba(0,0,0,0.04)] ${colors[task.color].border} border-opacity-50`}
-                    ">
-                        <div class="flex items-center gap-4 flex-1">
-                            <button onclick="toggleTask(${task.id})" class="transition-colors duration-300 focus:outline-none ${task.completed ? 'text-[#D4C4B7]' : colors[task.color].text}">
-                                ${task.completed ? 
-                                    '<i data-lucide="check-circle-2" class="w-6 h-6 fill-current text-white bg-[#D4C4B7] rounded-full"></i>' : 
-                                    '<i data-lucide="circle" class="w-6 h-6 stroke-2"></i>'
-                                }
-                            </button>
-                            
-                            <div class="flex flex-col">
-                                <span class="text-base font-medium transition-all duration-300 ${task.completed ? 'text-[#A3A3A3] line-through' : 'text-[#2D2D2D]'}">
-                                    ${task.title}
-                                </span>
-                                <div class="flex items-center gap-2 mt-1">
-                                    <span class="text-xs font-semibold px-2 py-0.5 rounded-md flex items-center gap-1 ${task.completed ? 'bg-[#F5F5F5] text-[#A3A3A3]' : colors[task.color].tag}">
-                                        <i data-lucide="clock" class="w-3 h-3"></i>
-                                        ${task.time}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
+            updateUI();
+            
+            // Sembunyikan Menu
+            menuOverlay.classList.add('opacity-0', 'pointer-events-none');
+            scoreResult.classList.add('hidden');
 
-                        <button onclick="deleteTask(${task.id})" class="p-2 text-[#D1D1D1] hover:text-[#EF4444] hover:bg-[#FEF2F2] rounded-xl transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100">
-                            <i data-lucide="trash-2" class="w-4 h-4"></i>
-                        </button>
-                    </div>
-                `).join('');
-            }
+            // Set posisi awal player di tengah
+            playerX = gameBox.clientWidth / 2 - (player.offsetWidth / 2);
+            updatePlayerPosition();
 
-            // Update Progress Bar
-            const completedTasks = tasks.filter(t => t.completed).length;
-            const totalTasks = tasks.length;
-            const progressPercentage = totalTasks === 0 ? 0 : Math.round((completedTasks / totalTasks) * 100);
-
-            document.getElementById('progress-percentage').textContent = `${progressPercentage}%`;
-            document.getElementById('progress-bar-fill').style.width = `${progressPercentage}%`;
-            document.getElementById('progress-text').textContent = `${completedTasks} dari ${totalTasks} tugas selesai`;
-
-            // Render ulang ikon Lucide setelah inject HTML
-            lucide.createIcons();
+            // Mulai Loop Game
+            gameLoopId = requestAnimationFrame(gameLoop);
+            scheduleSpawn();
         }
 
-        // Toggle Task Completion
-        function toggleTask(id) {
-            tasks = tasks.map(task => 
-                task.id === id ? { ...task, completed: !task.completed } : task
-            );
-            renderTasks();
+        // Fungsi Akhiri Game
+        function gameOver() {
+            isPlaying = false;
+            cancelAnimationFrame(gameLoopId);
+            clearTimeout(spawnInterval);
+
+            // Tampilkan Menu Game Over
+            menuTitle.innerText = "Yaaah, Kenyang!";
+            menuDesc.innerText = "Hamster sudah tidak kuat makan lagi.";
+            finalScore.innerText = score;
+            
+            scoreResult.classList.remove('hidden');
+            menuOverlay.classList.remove('opacity-0', 'pointer-events-none');
+            startBtn.innerText = "Main Lagi";
         }
 
-        // Delete Task
-        function deleteTask(id) {
-            tasks = tasks.filter(task => task.id !== id);
-            renderTasks();
+        // Update Text di Layar (Skor & Nyawa)
+        function updateUI() {
+            scoreDisplay.innerText = score;
+            // Bikin string hati sesuai jumlah nyawa
+            let heartString = '';
+            for(let i=0; i<lives; i++) heartString += '❤️';
+            for(let i=lives; i<3; i++) heartString += '🤍'; // Hati kosong
+            livesDisplay.innerText = heartString;
         }
 
-        // Handle Form Submit (Add Task)
-        document.getElementById('taskForm').addEventListener('submit', function(e) {
-            e.preventDefault();
+        // Kontrol Pemain (Mouse & Touch)
+        function movePlayer(clientX) {
+            if (!isPlaying) return;
+            const boxRect = gameBox.getBoundingClientRect();
+            // Menghitung posisi kursor relatif terhadap kotak game
+            let relativeX = clientX - boxRect.left;
             
-            const titleInput = document.getElementById('taskTitle');
-            const timeInput = document.getElementById('taskTime');
-            
-            if (!titleInput.value.trim() || !timeInput.value) return;
+            // Menyesuaikan posisi agar karakter berada di tengah jari/kursor
+            let newX = relativeX - (player.offsetWidth / 2);
 
-            const newTask = {
-                id: Date.now(),
-                title: titleInput.value,
-                time: timeInput.value,
-                completed: false,
-                color: selectedColor,
-            };
+            // Membatasi pergerakan agar tidak keluar layar
+            if (newX < 0) newX = 0;
+            if (newX > boxRect.width - player.offsetWidth) newX = boxRect.width - player.offsetWidth;
 
-            // Tambahkan dan sort berdasarkan jam
-            tasks = [...tasks, newTask].sort((a, b) => a.time.localeCompare(b.time));
-            
-            // Reset form
-            titleInput.value = '';
-            timeInput.value = '';
-            toggleForm(); // Tutup form
-            renderTasks(); // Render ulang
+            playerX = newX;
+            updatePlayerPosition();
+        }
+
+        function updatePlayerPosition() {
+            player.style.left = `${playerX}px`;
+        }
+
+        // Event Listener Mouse dan Touch (HP)
+        gameBox.addEventListener('mousemove', (e) => {
+            movePlayer(e.clientX);
         });
 
-        // Initial setup
-        updateHeader();
-        renderColorPicker();
-        renderTasks();
+        gameBox.addEventListener('touchmove', (e) => {
+            // e.preventDefault(); // Di-handle oleh CSS touch-action: none
+            movePlayer(e.touches[0].clientX);
+        });
 
-        // Update clock every minute
-        setInterval(updateHeader, 60000);
+        // Memunculkan Item Jatuh
+        function scheduleSpawn() {
+            if (!isPlaying) return;
+            
+            spawnItem();
+            
+            // Semakin tinggi skor, semakin cepat item muncul
+            let currentSpawnRate = Math.max(400, spawnRate - (score * 5));
+            spawnInterval = setTimeout(scheduleSpawn, currentSpawnRate);
+        }
+
+        function spawnItem() {
+            // Tentukan tipe item (80% baik, 20% buruk)
+            const isGood = Math.random() > 0.2;
+            const emojiList = isGood ? goodItems : badItems;
+            const emoji = emojiList[Math.floor(Math.random() * emojiList.length)];
+
+            // Buat elemen HTML
+            const el = document.createElement('div');
+            el.className = 'falling-item';
+            el.innerText = emoji;
+            
+            // Posisi acak di atas layar
+            const startX = Math.random() * (gameBox.clientWidth - 40); // 40px asumsi lebar font
+            el.style.left = `${startX}px`;
+            el.style.top = `-50px`;
+
+            gameBox.appendChild(el);
+
+            // Simpan data item
+            items.push({
+                el: el,
+                x: startX,
+                y: -50,
+                isGood: isGood,
+                // Variasi kecepatan sedikit tiap item
+                speed: baseSpeed + (Math.random() * 1.5) + (score * 0.05)
+            });
+        }
+
+        // Menampilkan teks +10 atau -Nyawa di layar
+        function showFloatingText(text, x, y, isGood) {
+            const floatEl = document.createElement('div');
+            floatEl.className = `floating-text ${isGood ? 'text-green-400' : 'text-red-500'}`;
+            floatEl.innerText = text;
+            floatEl.style.left = `${x}px`;
+            floatEl.style.top = `${y}px`;
+            gameBox.appendChild(floatEl);
+
+            // Hapus elemen setelah animasi selesai (1 detik)
+            setTimeout(() => {
+                floatEl.remove();
+            }, 1000);
+        }
+
+        // Cek tabrakan antara hamster dan item
+        function checkCollision(itemRect, playerRect) {
+            // Tambahkan sedikit toleransi agar tabrakan terasa lebih adil/nyaman (hitbox diperkecil sedikit)
+            const tolerance = 10;
+            return !(
+                itemRect.right - tolerance < playerRect.left + tolerance || 
+                itemRect.left + tolerance > playerRect.right - tolerance || 
+                itemRect.bottom - tolerance < playerRect.top + tolerance || 
+                itemRect.top + tolerance > playerRect.bottom - tolerance
+            );
+        }
+
+        // Loop Utama Game
+        function gameLoop() {
+            if (!isPlaying) return;
+
+            const playerRect = player.getBoundingClientRect();
+            const boxRect = gameBox.getBoundingClientRect();
+
+            // Iterasi dari belakang agar tidak error saat menghapus elemen dari array
+            for (let i = items.length - 1; i >= 0; i--) {
+                let item = items[i];
+                
+                // Pindahkan posisi Y ke bawah
+                item.y += item.speed;
+                item.el.style.top = `${item.y}px`;
+
+                const itemRect = item.el.getBoundingClientRect();
+
+                // Deteksi Tabrakan
+                if (checkCollision(itemRect, playerRect)) {
+                    // Terkena
+                    if (item.isGood) {
+                        score += 10;
+                        showFloatingText("+10", item.x, item.y, true);
+                        
+                        // Animasi Hamster mengunyah (Squish)
+                        player.classList.add('eat-anim');
+                        setTimeout(() => player.classList.remove('eat-anim'), 100);
+
+                        // Tambah speed dasar perlahan
+                        baseSpeed += 0.02; 
+                    } else {
+                        // Kena makanan buruk!
+                        lives -= 1;
+                        showFloatingText("Aduh!", item.x, item.y, false);
+                        
+                        // Animasi layar bergetar
+                        gameBox.classList.add('shake-screen');
+                        setTimeout(() => gameBox.classList.remove('shake-screen'), 300);
+                    }
+
+                    updateUI();
+
+                    // Hapus item
+                    item.el.remove();
+                    items.splice(i, 1);
+
+                    // Cek Game Over
+                    if (lives <= 0) {
+                        gameOver();
+                        return; // Berhenti mengeksekusi loop
+                    }
+                    continue; // Skip ke item berikutnya
+                }
+
+                // Hapus item jika jatuh melewati layar (Missed)
+                if (item.y > boxRect.height) {
+                    item.el.remove();
+                    items.splice(i, 1);
+                }
+            }
+
+            // Panggil loop lagi untuk frame berikutnya
+            gameLoopId = requestAnimationFrame(gameLoop);
+        }
+
+        // Event Listener Tombol Start
+        startBtn.addEventListener('click', startGame);
 
     </script>
 </body>
